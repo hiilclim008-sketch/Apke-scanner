@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Advanced Malware Scanner | Deep APK & HTML Analysis</title>
+  <meta name="description" content="Futuristic APK & HTML malware scanner with deep analysis. Developed by @incognito_4041" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-deep: #050508;
+      --bg-panel: #0a0c12;
+      --bg-card: #0e1118;
+      --border: #1a1f2e;
+      --neon: #00ff9d;
+      --neon-dim: #00cc7a;
+      --neon-glow: rgba(0, 255, 157, 0.45);
+      --cyan: #00e5ff;
+      --cyan-glow: rgba(0, 229, 255, 0.4);
+      --red: #ff3b5c;
+      --red-glow: rgba(255, 59, 92, 0.35);
+      --orange: #ff9f1c;
+      --text: #e8ecf4;
+      --text-muted: #8b93a7;
+      --success: #00ff9d;
+      --warning: #ff9f1c;
+      --danger: #ff3b5c;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Rajdhani', system-ui, sans-serif;
+      background: var(--bg-deep);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.5;
+    }
+
+    /* Subtle animated grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0, 255, 157, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 157, 0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+      z-index: 0;
+      animation: gridPulse 8s ease-in-out infinite;
+    }
+
+    @keyframes gridPulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.7; }
+    }
+
+    /* Scanline overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.12) 2px,
+        rgba(0, 0, 0, 0.12) 4px
+      );
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.35;
+    }
+
+    .container {
+      position: relative;
+      z-index: 2;
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    /* ========== HEADER ========== */
+    header {
+      text-align: center;
+      padding: 48px 0 32px;
+      position: relative;
+    }
+
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 255, 157, 0.08);
+      border: 1px solid rgba(0, 255, 157, 0.25);
+      color: var(--neon);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      padding: 6px 16px;
+      border-radius: 999px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 20px var(--neon-glow);
+      animation: badgeGlow 3s ease-in-out infinite;
+    }
+
+    @keyframes badgeGlow {
+      0%, 100% { box-shadow: 0 0 12px var(--neon-glow); }
+      50% { box-shadow: 0 0 28px var(--neon-glow); }
+    }
+
+    .brand-badge span {
+      width: 6px;
+      height: 6px;
+      background: var(--neon);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--neon);
+      animation: blink 1.4s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.8rem, 5vw, 2.6rem);
+      letter-spacing: 0.04em;
+      background: linear-gradient(135deg, #fff 0%, var(--neon) 50%, var(--cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+      text-shadow: 0 0 40px var(--neon-glow);
+    }
+
+    .subtitle {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .developer {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.95rem;
+      color: var(--cyan);
+      letter-spacing: 0.05em;
+    }
+
+    .developer a {
+      color: inherit;
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.2s, text-shadow 0.2s;
+    }
+
+    .developer a:hover {
+      border-bottom-color: var(--cyan);
+      text-shadow: 0 0 12px var(--cyan-glow);
+    }
+
+    /* ========== MAIN PANEL ========== */
+    .panel {
+      background: linear-gradient(180deg, rgba(14, 17, 24, 0.95) 0%, rgba(10, 12, 18, 0.98) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow:
+        0 0 0 1px rgba(0, 255, 157, 0.05),
+        0 20px 50px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--neon), transparent);
+      opacity: 0.6;
+    }
+
+    /* ========== UPLOAD ZONE ========== */
+    #upload-section {
+      transition: opacity 0.4s, transform 0.4s;
+    }
+
+    #upload-section.hidden {
+      display: none;
+    }
+
+    .drop-zone {
+      border: 2px dashed rgba(0, 255, 157, 0.35);
+      border-radius: 14px;
+      padding: 56px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: rgba(0, 255, 157, 0.02);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .drop-zone::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 14px;
+      background: linear-gradient(45deg, transparent, var(--neon), transparent, var(--cyan), transparent);
+      background-size: 300% 300%;
+      opacity: 0;
+      z-index: -1;
+      transition: opacity 0.3s;
+      animation: borderFlow 4s linear infinite;
+    }
+
+    @keyframes borderFlow {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 300% 50%; }
+    }
+
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+      border-color: var(--neon);
+      background: rgba(0, 255, 157, 0.06);
+      box-shadow: 0 0 40px var(--neon-glow), inset 0 0 30px rgba(0, 255, 157, 0.05);
+      transform: translateY(-2px);
+    }
+
+    .drop-zone:hover::before,
+    .drop-zone.drag-over::before {
+      opacity: 0.25;
+    }
+
+    .drop-icon {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 20px;
+      border: 2px solid var(--neon);
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: var(--neon);
+      box-shadow: 0 0 24px var(--neon-glow);
+      background: rgba(0, 255, 157, 0.08);
+      transition: transform 0.3s;
+    }
+
+    .drop-zone:hover .drop-icon {
+      transform: scale(1.08);
+    }
+
+    .drop-text {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .drop-hint {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    .browse-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, rgba(0, 255, 157, 0.15), rgba(0, 229, 255, 0.1));
+      border: 1px solid rgba(0, 255, 157, 0.5);
+      color: var(--neon);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      padding: 12px 28px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.25s;
+      box-shadow: 0 0 16px rgba(0, 255, 157, 0.15);
+    }
+
+    .browse-btn:hover {
+      background: linear-gradient(135deg, rgba(0, 255, 157, 0.25), rgba(0, 229, 255, 0.18));
+      box-shadow: 0 0 28px var(--neon-glow);
+      transform: translateY(-1px);
+    }
+
+    #file-input {
+      display: none;
+    }
+
+    .supported {
+      margin-top: 20px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    .supported span {
+      color: var(--neon-dim);
+    }
+
+    /* ========== SCANNING SECTION ========== */
+    #scanning-section {
+      display: none;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    #scanning-section.active {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .radar-container {
+      width: 180px;
+      height: 180px;
+      margin: 0 auto 28px;
+      position: relative;
+    }
+
+    .radar {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 2px solid rgba(0, 255, 157, 0.3);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 40px var(--neon-glow), inset 0 0 30px rgba(0, 255, 157, 0.08);
+    }
+
+    .radar::before {
+      content: '';
+      position: absolute;
+      inset: 20%;
+      border-radius: 50%;
+      border: 1px solid rgba(0, 255, 157, 0.2);
+    }
+
+    .radar::after {
+      content: '';
+      position: absolute;
+      inset: 40%;
+      border-radius: 50%;
+      border: 1px solid rgba(0, 255, 157, 0.15);
+    }
+
+    .radar-sweep {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 50%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--neon));
+      transform-origin: left center;
+      animation: sweep 2s linear infinite;
+      box-shadow: 0 0 12px var(--neon);
+    }
+
+    @keyframes sweep {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .radar-dot {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: var(--neon);
+      border-radius: 50%;
+      top: 30%;
+      left: 60%;
+      box-shadow: 0 0 10px var(--neon);
+      animation: pulseDot 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 0.4; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    .scan-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: var(--neon);
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+      text-shadow: 0 0 20px var(--neon-glow);
+    }
+
+    .scan-file {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+      word-break: break-all;
+    }
+
+    .progress-track {
+      height: 6px;
+      background: rgba(0, 255, 157, 0.1);
+      border-radius: 999px;
+      overflow: hidden;
+      max-width: 320px;
+      margin: 0 auto 12px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--neon-dim), var(--neon), var(--cyan));
+      border-radius: 999px;
+      box-shadow: 0 0 12px var(--neon-glow);
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .matrix-lines {
+      margin-top: 24px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.8rem;
+      color: rgba(0, 255, 157, 0.5);
+      height: 72px;
+      overflow: hidden;
+      text-align: left;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .matrix-lines div {
+      opacity: 0;
+      animation: matrixFade 0.8s forwards;
+    }
+
+    @keyframes matrixFade {
+      to { opacity: 1; }
+    }
+
+    /* ========== RESULTS SECTION ========== */
+    #results-section {
+      display: none;
+    }
+
+    #results-section.active {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .result-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .file-meta h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--text);
+      word-break: break-all;
+      margin-bottom: 6px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.85rem;
+      padding: 6px 14px;
+      border-radius: 6px;
+      letter-spacing: 0.04em;
+    }
+
+    .status-badge.threat {
+      background: rgba(255, 59, 92, 0.12);
+      border: 1px solid rgba(255, 59, 92, 0.4);
+      color: var(--red);
+      box-shadow: 0 0 16px var(--red-glow);
+    }
+
+    .status-badge.clean {
+      background: rgba(0, 255, 157, 0.1);
+      border: 1px solid rgba(0, 255, 157, 0.35);
+      color: var(--neon);
+    }
+
+    .scan-again-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .scan-again-btn:hover {
+      border-color: var(--neon);
+      color: var(--neon);
+      box-shadow: 0 0 16px rgba(0, 255, 157, 0.15);
+    }
+
+    /* Secrets / Phishing box */
+    .alert-box {
+      background: linear-gradient(135deg, rgba(255, 59, 92, 0.08), rgba(255, 59, 92, 0.03));
+      border: 1px solid rgba(255, 59, 92, 0.35);
+      border-radius: 12px;
+      padding: 20px 22px;
+      margin-bottom: 24px;
+      box-shadow: 0 0 30px var(--red-glow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .alert-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--red);
+      box-shadow: 0 0 12px var(--red);
+    }
+
+    .alert-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--red);
+      letter-spacing: 0.04em;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .secret-item {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.9rem;
+      color: #ffb3c0;
+      padding: 8px 12px;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 6px;
+      margin-bottom: 8px;
+      border: 1px solid rgba(255, 59, 92, 0.15);
+      word-break: break-all;
+    }
+
+    .secret-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .secret-label {
+      color: var(--red);
+      font-weight: 600;
+      margin-right: 8px;
+    }
+
+    /* Permissions */
+    .section-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--text);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .permissions-grid {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+
+    .perm-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      transition: border-color 0.2s;
+    }
+
+    .perm-item:hover {
+      border-color: rgba(0, 255, 157, 0.25);
+    }
+
+    .perm-icon {
+      font-size: 1.2rem;
+      width: 28px;
+      text-align: center;
+    }
+
+    .perm-name {
+      flex: 1;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .perm-risk {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.8rem;
+      padding: 3px 10px;
+      border-radius: 4px;
+      letter-spacing: 0.03em;
+    }
+
+    .perm-risk.high {
+      background: rgba(255, 59, 92, 0.15);
+      color: var(--red);
+      border: 1px solid rgba(255, 59, 92, 0.3);
+    }
+
+    .perm-risk.medium {
+      background: rgba(255, 159, 28, 0.12);
+      color: var(--orange);
+      border: 1px solid rgba(255, 159, 28, 0.3);
+    }
+
+    .perm-risk.normal {
+      background: rgba(0, 255, 157, 0.1);
+      color: var(--neon);
+      border: 1px solid rgba(0, 255, 157, 0.25);
+    }
+
+    /* Download buttons */
+    .download-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 8px;
+    }
+
+    .dl-btn {
+      flex: 1;
+      min-width: 200px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      padding: 14px 24px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.25s;
+      border: none;
+      text-decoration: none;
+      color: #050508;
+    }
+
+    .dl-btn.primary {
+      background: linear-gradient(135deg, var(--neon), var(--neon-dim));
+      box-shadow: 0 0 24px var(--neon-glow);
+    }
+
+    .dl-btn.primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 36px var(--neon-glow);
+    }
+
+    .dl-btn.secondary {
+      background: linear-gradient(135deg, rgba(0, 229, 255, 0.9), #00b8d4);
+      box-shadow: 0 0 20px var(--cyan-glow);
+    }
+
+    .dl-btn.secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 32px var(--cyan-glow);
+    }
+
+    /* ========== FOOTER ========== */
+    footer {
+      text-align: center;
+      padding: 40px 20px 20px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .footer-line {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .footer-line a {
+      color: var(--cyan);
+      text-decoration: none;
+      transition: text-shadow 0.2s;
+    }
+
+    .footer-line a:hover {
+      text-shadow: 0 0 12px var(--cyan-glow);
+    }
+
+    .footer-copy {
+      font-size: 0.8rem;
+      color: #4a5168;
+      margin-top: 12px;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .panel {
+        padding: 22px 16px;
+      }
+      .drop-zone {
+        padding: 40px 16px;
+      }
+      .result-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand-badge">
+        <span></span>
+        LIVE ENGINE
+      </div>
+      <h1>Advanced Malware Scanner</h1>
+      <p class="subtitle">Deep APK &amp; HTML Analysis</p>
+      <p class="developer">Developed by <a href="https://t.me/incognito_4041" target="_blank" rel="noopener">@incognito_4041</a></p>
+    </header>
+
+    <main class="panel">
+      <!-- UPLOAD -->
+      <section id="upload-section">
+        <div class="drop-zone" id="drop-zone">
+          <div class="drop-icon">⬆</div>
+          <p class="drop-text">Drop your APK / HTML file here</p>
+          <p class="drop-hint">Max size: 100MB</p>
+          <button type="button" class="browse-btn" id="browse-btn">Browse File</button>
+          <input type="file" id="file-input" accept=".apk,.html,.htm,application/vnd.android.package-archive,text/html" />
+          <p class="supported">Supported: <span>.apk</span> · <span>.html</span> · <span>.htm</span></p>
+        </div>
+      </section>
+
+      <!-- SCANNING -->
+      <section id="scanning-section">
+        <div class="radar-container">
+          <div class="radar">
+            <div class="radar-sweep"></div>
+            <div class="radar-dot"></div>
+          </div>
+        </div>
+        <h3 class="scan-title">SCANNING IN PROGRESS...</h3>
+        <p class="scan-file" id="scanning-filename">analyzing_file.apk</p>
+        <div class="progress-track">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <p class="progress-text" id="progress-text">0% — Initializing deep analysis</p>
+        <div class="matrix-lines" id="matrix-lines"></div>
+      </section>
+
+      <!-- RESULTS -->
+      <section id="results-section">
+        <div class="result-header">
+          <div class="file-meta">
+            <h2 id="result-filename">sample_malware.apk</h2>
+            <div class="status-badge threat" id="result-status">
+              ⚠ THREATS DETECTED
+            </div>
+          </div>
+          <button type="button" class="scan-again-btn" id="scan-again-btn">← Scan Another File</button>
+        </div>
+
+        <!-- Secrets & Phishing -->
+        <div class="alert-box" id="secrets-box">
+          <div class="alert-title">🚨 SECRETS &amp; PHISHING DETECTED</div>
+          <div class="secret-item">
+            <span class="secret-label">Telegram Bot Token:</span>
+            5432109876:AAHxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+          </div>
+          <div class="secret-item">
+            <span class="secret-label">Attacker Chat ID:</span>
+            1098765432
+          </div>
+          <div class="secret-item">
+            <span class="secret-label">Phishing URL:</span>
+            https://secure-login-verify[.]xyz/auth
+          </div>
+          <div class="secret-item">
+            <span class="secret-label">Hardcoded API Key:</span>
+            sk_live_51Nxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+          </div>
+        </div>
+
+        <!-- Permissions -->
+        <div class="section-title">📱 APP PERMISSIONS</div>
+        <div class="permissions-grid" id="permissions-list">
+          <div class="perm-item">
+            <span class="perm-icon">🔴</span>
+            <span class="perm-name">READ_SMS / RECEIVE_SMS</span>
+            <span class="perm-risk high">High Risk</span>
+          </div>
+          <div class="perm-item">
+            <span class="perm-icon">🔴</span>
+            <span class="perm-name">READ_CONTACTS</span>
+            <span class="perm-risk high">High Risk</span>
+          </div>
+          <div class="perm-item">
+            <span class="perm-icon">🟠</span>
+            <span class="perm-name">ACCESS_FINE_LOCATION</span>
+            <span class="perm-risk medium">Medium</span>
+          </div>
+          <div class="perm-item">
+            <span class="perm-icon">🟠</span>
+            <span class="perm-name">CAMERA</span>
+            <span class="perm-risk medium">Medium</span>
+          </div>
+          <div class="perm-item">
+            <span class="perm-icon">✅</span>
+            <span class="perm-name">INTERNET</span>
+            <span class="perm-risk normal">Normal</span>
+          </div>
+          <div class="perm-item">
+            <span class="perm-icon">✅</span>
+            <span class="perm-name">ACCESS_NETWORK_STATE</span>
+            <span class="perm-risk normal">Normal</span>
+          </div>
+        </div>
+
+        <!-- Downloads -->
+        <div class="download-row">
+          <button type="button" class="dl-btn primary" id="dl-report-btn">📥 Download Report (.txt)</button>
+          <button type="button" class="dl-btn secondary" id="dl-json-btn">📥 Download Developer Data (.json)</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer>
+    <p class="footer-line">Security Scan by <a href="https://t.me/incognito_4041" target="_blank" rel="noopener">@incognito_4041</a></p>
+    <p class="footer-line">Support / Contact: Telegram <a href="https://t.me/incognito_4041" target="_blank" rel="noopener">@incognito_4041</a></p>
+    <p class="footer-copy">© 2025 Advanced Malware Scanner — For educational & research purposes only</p>
+  </footer>
+
+  <script>
+    // ============================================================
+    // CONFIG — Connect your Render backend here later
+    // ============================================================
+    const BACKEND_URL = ""; // e.g. "https://your-app.onrender.com/api/scan"
+
+    // ============================================================
+    // DOM refs
+    // ============================================================
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const browseBtn = document.getElementById('browse-btn');
+    const uploadSection = document.getElementById('upload-section');
+    const scanningSection = document.getElementById('scanning-section');
+    const resultsSection = document.getElementById('results-section');
+    const scanningFilename = document.getElementById('scanning-filename');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    const matrixLines = document.getElementById('matrix-lines');
+    const resultFilename = document.getElementById('result-filename');
+    const resultStatus = document.getElementById('result-status');
+    const scanAgainBtn = document.getElementById('scan-again-btn');
+    const dlReportBtn = document.getElementById('dl-report-btn');
+    const dlJsonBtn = document.getElementById('dl-json-btn');
+
+    let currentFile = null;
+    let lastScanResult = null; // store mock / real result for downloads
+
+    // ============================================================
+    // Upload interactions
+    // ============================================================
+    browseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fileInput.click();
+    });
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('drag-over');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('drag-over');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      const files = e.dataTransfer.files;
+      if (files.length) handleFile(files[0]);
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length) handleFile(fileInput.files[0]);
+    });
+
+    // ============================================================
+    // File validation & start flow
+    // ============================================================
+    function handleFile(file) {
+      const maxSize = 100 * 1024 * 1024; // 100MB
+      const validExt = /\.(apk|html|htm)$/i.test(file.name);
+      const validType =
+        file.type === 'application/vnd.android.package-archive' ||
+        file.type === 'text/html' ||
+        file.type === '' || // some browsers give empty type for apk
+        validExt;
+
+      if (!validExt && !validType) {
+        alert('Please select a valid .apk or .html file.');
+        return;
+      }
+      if (file.size > maxSize) {
+        alert('File exceeds the 100MB limit.');
+        return;
+      }
+
+      currentFile = file;
+      startScanUI(file);
+      scanFile(file);
+    }
+
+    // ============================================================
+    // UI state helpers
+    // ============================================================
+    function startScanUI(file) {
+      uploadSection.classList.add('hidden');
+      resultsSection.classList.remove('active');
+      scanningSection.classList.add('active');
+      scanningFilename.textContent = file.name;
+      progressBar.style.width = '0%';
+      progressText.textContent = '0% — Initializing deep analysis';
+      matrixLines.innerHTML = '';
+      runMatrixFeed();
+      animateProgress();
+    }
+
+    function showResults(result) {
+      scanningSection.classList.remove('active');
+      resultsSection.classList.add('active');
+
+      resultFilename.textContent = result.fileName || currentFile.name;
+
+      if (result.threatsDetected) {
+        resultStatus.className = 'status-badge threat';
+        resultStatus.innerHTML = '⚠ THREATS DETECTED';
+      } else {
+        resultStatus.className = 'status-badge clean';
+        resultStatus.innerHTML = '✓ NO THREATS FOUND';
+      }
+
+      // Secrets box
+      const secretsBox = document.getElementById('secrets-box');
+      if (result.secrets && result.secrets.length) {
+        secretsBox.style.display = 'block';
+        secretsBox.innerHTML = `
+          <div class="alert-title">🚨 SECRETS &amp; PHISHING DETECTED</div>
+          ${result.secrets.map(s => `
+            <div class="secret-item">
+              <span class="secret-label">${s.label}:</span>
+              ${s.value}
+            </div>
+          `).join('')}
+        `;
+      } else {
+        secretsBox.style.display = 'none';
+      }
+
+      // Permissions
+      const permList = document.getElementById('permissions-list');
+      if (result.permissions && result.permissions.length) {
+        permList.innerHTML = result.permissions.map(p => `
+          <div class="perm-item">
+            <span class="perm-icon">${p.icon}</span>
+            <span class="perm-name">${p.name}</span>
+            <span class="perm-risk \( {p.riskClass}"> \){p.risk}</span>
+          </div>
+        `).join('');
+      }
+
+      lastScanResult = result;
+    }
+
+    function resetUI() {
+      uploadSection.classList.remove('hidden');
+      scanningSection.classList.remove('active');
+      resultsSection.classList.remove('active');
+      fileInput.value = '';
+      currentFile = null;
+      lastScanResult = null;
+      progressBar.style.width = '0%';
+    }
+
+    scanAgainBtn.addEventListener('click', resetUI);
+
+    // ============================================================
+    // Fake progress + matrix feed (visual only)
+    // ============================================================
+    const matrixMessages = [
+      '> Loading binary headers...',
+      '> Extracting DEX / HTML payload...',
+      '> Scanning for hardcoded tokens...',
+      '> Analyzing permission manifest...',
+      '> Checking C2 / phishing patterns...',
+      '> Heuristic engine: deep pass...',
+      '> Cross-referencing known IOCs...',
+      '> Building threat report...'
+    ];
+
+    function runMatrixFeed() {
+      let i = 0;
+      matrixLines.innerHTML = '';
+      const interval = setInterval(() => {
+        if (i >= matrixMessages.length || !scanningSection.classList.contains('active')) {
+          clearInterval(interval);
+          return;
+        }
+        const line = document.createElement('div');
+        line.textContent = matrixMessages[i];
+        line.style.animationDelay = '0s';
+        matrixLines.appendChild(line);
+        matrixLines.scrollTop = matrixLines.scrollHeight;
+        i++;
+      }, 450);
+    }
+
+    function animateProgress() {
+      let progress = 0;
+      const steps = [
+        { p: 12, t: '12% — Parsing file structure' },
+        { p: 28, t: '28% — Extracting resources' },
+        { p: 45, t: '45% — Static analysis running' },
+        { p: 62, t: '62% — Secret pattern matching' },
+        { p: 78, t: '78% — Permission risk scoring' },
+        { p: 91, t: '91% — Generating report' },
+        { p: 100, t: '100% — Analysis complete' }
+      ];
+      let step = 0;
+
+      const tick = setInterval(() => {
+        if (!scanningSection.classList.contains('active')) {
+          clearInterval(tick);
+          return;
+        }
+        if (step < steps.length) {
+          progress = steps[step].p;
+          progressBar.style.width = progress + '%';
+          progressText.textContent = steps[step].t;
+          step++;
+        } else {
+          clearInterval(tick);
+        }
+      }, 550);
+    }
+
+    // ============================================================
+    // Core scan function (API-ready)
+    // ============================================================
+    async function scanFile(file) {
+      // If BACKEND_URL is set, call the real API.
+      // Otherwise fall back to a realistic mock for frontend demo.
+
+      if (BACKEND_URL && BACKEND_URL.trim() !== '') {
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+
+          const response = await fetch(BACKEND_URL, {
+            method: 'POST',
+            body: formData
+            // headers: { Authorization: 'Bearer ...' }  // add if needed
+          });
+
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+          const data = await response.json();
+          // Expected shape (adapt to your backend):
+          // {
+          //   fileName, threatsDetected,
+          //   secrets: [{label, value}],
+          //   permissions: [{name, icon, risk, riskClass}]
+          // }
+          showResults(normalizeResult(data, file));
+          return;
+        } catch (err) {
+          console.error('Scan API error:', err);
+          alert('Backend unreachable. Showing demo results instead.');
+          // fall through to mock
+        }
+      }
+
+      // --- MOCK RESULT (remove once backend is live) ---
+      await delay(3800); // let the animation finish nicely
+      const mock = buildMockResult(file);
+      showResults(mock);
+    }
+
+    function normalizeResult(data, file) {
+      return {
+        fileName: data.fileName || file.name,
+        threatsDetected: data.threatsDetected ?? true,
+        secrets: data.secrets || [],
+        permissions: data.permissions || [],
+        raw: data
+      };
+    }
+
+    function buildMockResult(file) {
+      const isApk = /\.apk$/i.test(file.name);
+      return {
+        fileName: file.name,
+        threatsDetected: true,
+        secrets: [
+          { label: 'Telegram Bot Token', value: '5432109876:AAHxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' },
+          { label: 'Attacker Chat ID', value: '1098765432' },
+          { label: 'Phishing URL', value: 'https://secure-login-verify[.]xyz/auth' },
+          { label: 'Hardcoded API Key', value: 'sk_live_51Nxxxxxxxxxxxxxxxxxxxxxxxxxxxx' }
+        ],
+        permissions: isApk ? [
+          { name: 'READ_SMS / RECEIVE_SMS', icon: '🔴', risk: 'High Risk', riskClass: 'high' },
+          { name: 'READ_CONTACTS', icon: '🔴', risk: 'High Risk', riskClass: 'high' },
+          { name: 'ACCESS_FINE_LOCATION', icon: '🟠', risk: 'Medium', riskClass: 'medium' },
+          { name: 'CAMERA', icon: '🟠', risk: 'Medium', riskClass: 'medium' },
+          { name: 'INTERNET', icon: '✅', risk: 'Normal', riskClass: 'normal' },
+          { name: 'ACCESS_NETWORK_STATE', icon: '✅', risk: 'Normal', riskClass: 'normal' }
+        ] : [
+          { name: 'External script injection', icon: '🔴', risk: 'High Risk', riskClass: 'high' },
+          { name: 'Credential harvesting form', icon: '🔴', risk: 'High Risk', riskClass: 'high' },
+          { name: 'Obfuscated JS payload', icon: '🟠', risk: 'Medium', riskClass: 'medium' },
+          { name: 'Clipboard access attempt', icon: '🟠', risk: 'Medium', riskClass: 'medium' }
+        ],
+        raw: { mock: true, size: file.size, type: file.type }
+      };
+    }
+
+    function delay(ms) {
+      return new Promise(r => setTimeout(r, ms));
+    }
+
+    // ============================================================
+    // Download helpers
+    // ============================================================
+    dlReportBtn.addEventListener('click', () => {
+      if (!lastScanResult) return;
+      const r = lastScanResult;
+      let txt = `ADVANCED MALWARE SCANNER — REPORT
+========================================
+File: ${r.fileName}
+Status: ${r.threatsDetected ? 'THREATS DETECTED' : 'CLEAN'}
+Scanned by: @incognito_4041
+Date: ${new Date().toISOString()}
+
+--- SECRETS & PHISHING ---
+`;
+      if (r.secrets && r.secrets.length) {
+        r.secrets.forEach(s => {
+          txt += `${s.label}: ${s.value}\n`;
+        });
+      } else {
+        txt += 'None detected.\n';
+      }
+
+      txt += `\n--- PERMISSIONS / FINDINGS ---\n`;
+      if (r.permissions && r.permissions.length) {
+        r.permissions.forEach(p => {
+          txt += `[${p.risk}] ${p.name}\n`;
+        });
+      }
+
+      txt += `\n========================================
+Security Scan by @incognito_4041
+Telegram: @incognito_4041
+`;
+
+      downloadBlob(txt, `scan-report-${sanitize(r.fileName)}.txt`, 'text/plain');
+    });
+
+    dlJsonBtn.addEventListener('click', () => {
+      if (!lastScanResult) return;
+      const payload = {
+        meta: {
+          tool: 'Advanced Malware Scanner',
+          developer: '@incognito_4041',
+          timestamp: new Date().toISOString()
+        },
+        result: lastScanResult
+      };
+      const json = JSON.stringify(payload, null, 2);
+      downloadBlob(json, `dev-data-${sanitize(lastScanResult.fileName)}.json`, 'application/json');
+    });
+
+    function downloadBlob(content, filename, mime) {
+      const blob = new Blob([content], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function sanitize(name) {
+      return name.replace(/[^a-z0-9._-]/gi, '_').slice(0, 40);
+    }
+  </script>
+</body>
+</html>
